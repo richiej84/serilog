@@ -37,6 +37,13 @@ namespace Serilog
     public interface ILogger
     {
         /// <summary>
+        /// Create a logger that enriches log events with the additional properties specified in the propertyBag.
+        /// </summary>
+        /// <param name="propertyBag">An anonymous type containing properties.</param>
+        /// <returns>A logger that will enrich log events as specified.</returns>
+        ILogger AdditionalProperties(object propertyBag);
+
+        /// <summary>
         /// Create a logger that enriches log events via the provided enrichers.
         /// </summary>
         /// <param name="enrichers">Enrichers that apply in the context.</param>

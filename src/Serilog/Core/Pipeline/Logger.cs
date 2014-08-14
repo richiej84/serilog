@@ -46,6 +46,14 @@ namespace Serilog.Core.Pipeline
             _enrichers = enrichers.ToArray();
         }
 
+        public ILogger AdditionalProperties(object propertyBag)
+        {
+            return ForContext(new[]
+            {
+                new PropertyBagEnricher(propertyBag)
+            });
+        }
+
         public ILogger ForContext(IEnumerable<ILogEventEnricher> enrichers)
         {
             return new Logger(

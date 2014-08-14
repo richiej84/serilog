@@ -14,6 +14,7 @@
 
 using System;
 using Serilog.Core;
+using Serilog.Core.Enrichers;
 using Serilog.Core.Pipeline;
 using Serilog.Events;
 
@@ -52,6 +53,19 @@ namespace Serilog
                 if (value == null) throw new ArgumentNullException("value");
                 _logger = value;
             }
+        }
+
+        /// <summary>
+        /// Create a logger that enriches log events with the additional properties specified in the propertyBag.
+        /// </summary>
+        /// <param name="propertyBag">An anonymous type containing properties.</param>
+        /// <returns>A logger that will enrich log events as specified.</returns>
+        public static ILogger AdditionalProperties(object propertyBag)
+        {
+            return ForContext(new ILogEventEnricher[]
+            {
+                new PropertyBagEnricher(propertyBag)
+            });
         }
 
         /// <summary>
