@@ -46,12 +46,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context\ImmutableStack.cs" />
+    <Compile Include="Context\OperationContext.cs" />
+    <Compile Include="Context\OperationOutcome.cs" />
     <Compile Include="Enrichers\LogContextEnricher.cs" />
+    <Compile Include="Enrichers\OperationContextEnricher.cs" />
     <Compile Include="Enrichers\ProcessIdEnricher.cs" />
     <Compile Include="Enrichers\MachineNameEnricher.cs" />
     <Compile Include="Enrichers\ThreadIdEnricher.cs" />
     <Compile Include="Context\LogContext.cs" />
     <Compile Include="LoggerConfigurationFullNetFxExtensions.cs" />
+    <Compile Include="LoggerExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sinks\IOFile\CharacterCountLimitedTextWriter.cs" />
     <Compile Include="Sinks\IOFile\FileSink.cs" />

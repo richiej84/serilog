@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using Serilog.Configuration;
+using Serilog.Context;
 using Serilog.Enrichers;
 using Serilog.Events;
 using Serilog.Formatting.Display;
@@ -201,6 +202,18 @@ namespace Serilog
             return enrichmentConfiguration.With<LogContextEnricher>();
         }
 
+        /// <summary>
+        /// Enrich log events with properties from <see cref="OperationContext"/>.
+        /// </summary>
+        /// <param name="enrichmentConfiguration">Logger enrichment configuration.</param>
+        /// <returns>Configuration object allowing method chaining.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static LoggerConfiguration FromOperationContext(
+            this LoggerEnrichmentConfiguration enrichmentConfiguration)
+        {
+            if (enrichmentConfiguration == null) throw new ArgumentNullException("enrichmentConfiguration");
+            return enrichmentConfiguration.With<OperationContextEnricher>();
+        }
         /// <summary>
         /// Enrich log events with a ThreadId property containing the current <see cref="Thread.ManagedThreadId"/>.
         /// </summary>
