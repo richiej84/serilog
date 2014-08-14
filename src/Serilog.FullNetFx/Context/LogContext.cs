@@ -75,6 +75,25 @@ namespace Serilog.Context
         /// that can later be used to remove the properties. The properties must
         /// be popped from the same thread/logical call context.
         /// </summary>
+        /// <param name="propertyBag">An anonymous type containing properties.</param>
+        /// <returns>A handle to later remove the property from the context.</returns>
+        /// <param name="destructureObjects">If true, and the value is a non-primitive, non-array type,
+        /// then the value will be converted to a structure; otherwise, unknown types will
+        /// be converted to scalars, which are generally stored as strings.</param>
+        /// <returns>A token that must be disposed, in order, to pop properties back off the stack.</returns>
+        public static IDisposable PushProperties(object propertyBag, bool destructureObjects = false)
+        {
+            return PushProperties(new ILogEventEnricher[]
+            {
+                new PropertyBagEnricher(propertyBag, destructureObjects)
+            });
+        }
+
+        /// <summary>
+        /// Push multiple properties onto the context, returning an <see cref="IDisposable"/>
+        /// that can later be used to remove the properties. The properties must
+        /// be popped from the same thread/logical call context.
+        /// </summary>
         /// <param name="properties">Log Properties to push onto the log context</param>
         /// <returns>A token that must be disposed, in order, to pop properties back off the stack.</returns>
         /// <exception cref="ArgumentNullException"></exception>

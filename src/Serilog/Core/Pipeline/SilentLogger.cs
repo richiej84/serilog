@@ -20,7 +20,7 @@ namespace Serilog.Core.Pipeline
 {
     class SilentLogger : ILogger
     {
-        public ILogger AdditionalProperties(object propertyBag)
+        public ILogger AdditionalProperties(object propertyBag, bool destructureObjects = false)
         {
             return this;
         }

@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin40\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FULLNET</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -27,7 +27,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin40\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;FULLNET</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -46,6 +46,7 @@
     <Compile Include="Configuration\LoggerMinimumLevelConfiguration.cs" />
     <Compile Include="Configuration\LoggerSinkConfiguration.cs" />
     <Compile Include="Core\Constants.cs" />
+    <Compile Include="Core\Enrichers\PropertyBagEnricher.cs" />
     <Compile Include="Core\Enrichers\PropertyEnricher.cs" />
     <Compile Include="Core\IScalarConversionPolicy.cs" />
     <Compile Include="Core\Sinks\CopyingSink.cs" />

@@ -28,9 +28,10 @@ namespace Serilog.Context
         private readonly TimeSpan? _warnIfExceeds;
         private readonly object _identifier;
         private readonly string _description;
+        private readonly bool _autoSucceedOnExit;
         private readonly bool _autoFailOnException;
         private readonly IDisposable _operationContextBookmark;
-        private readonly IDisposable _contextualPropertiesBookmark;
+        private IDisposable _contextualPropertiesBookmark;
         private readonly Stopwatch _sw;
         private OperationOutcome _outcome = OperationOutcome.Unknown;
 
@@ -42,6 +43,7 @@ namespace Serilog.Context
         /// <param name="description">A description for the operation.</param>
         /// <param name="level">The level used to write the operation details to the logger. By default this is the information level.</param>
         /// <param name="warnIfExceeds">Specifies a limit, if it takes more than this limit, the level will be set to warning. By default this is not used.</param>
+        /// <param name="autoSucceedOnExit">Specifies whether or not the operation should be marked with an outcome of <see cref="OperationOutcome.Success"/> if it completes without exception.</param>
         /// <param name="autoFailOnException">Specifies whether or not the operation should be marked with an outcome of <see cref="OperationOutcome.Fail"/> if an exception is detected.</param>
         /// <param name="propertyBag">A colletion of additional properties to associate with the current operation. This is typically an anonymous type.</param>
         internal OperationContext(ILogger logger,
@@ -49,6 +51,7 @@ namespace Serilog.Context
                                   TimeSpan? warnIfExceeds,
                                   object identifier,
                                   string description,
+                                  bool autoSucceedOnExit,
                                   bool autoFailOnException,
                                   object propertyBag)
         {
@@ -57,6 +60,7 @@ namespace Serilog.Context
             _warnIfExceeds = warnIfExceeds;
             _identifier = identifier;
             _description = description;
+            _autoSucceedOnExit = autoSucceedOnExit;
             _autoFailOnException = autoFailOnException;
 
             _operationContextBookmark = OperationLogContext.PushOperationId(identifier);
@@ -64,7 +68,7 @@ namespace Serilog.Context
             if (propertyBag != null)
             {
                 // Save the first contextual property that we set. We then dispose of this bookmark, reverting the stack to what it was previously
-                _contextualPropertiesBookmark = LogContext.PushProperties(new PropertyBagEnricher(propertyBag));
+                _contextualPropertiesBookmark = PushProperties(propertyBag);
             }
 
             _logger.Write(_level, BeginOperationMessage, _identifier, _description);
@@ -97,11 +101,55 @@ namespace Serilog.Context
         }
 
         /// <summary>
+        /// Push a property onto the context, returning an <see cref="IDisposable"/>
+        /// that can later be used to remove the property, along with any others that
+        /// may have been pushed on top of it and not yet popped. The property must
+        /// be popped from the same thread/logical call context.
+        /// </summary>
+        /// <param name="name">The name of the property.</param>
+        /// <param name="value">The value of the property.</param>
+        /// <returns>A handle to later remove the property from the context.</returns>
+        /// <param name="destructureObjects">If true, and the value is a non-primitive, non-array type,
+        /// then the value will be converted to a structure; otherwise, unknown types will
+        /// be converted to scalars, which are generally stored as strings.</param>
+        /// <returns>A token that must be disposed, in order, to pop properties back off the stack.</returns>
+        public IDisposable PushProperty(string name, object value, bool destructureObjects = false)
+        {
+            var bookmark = LogContext.PushProperty(name, value, destructureObjects);
+            if (_contextualPropertiesBookmark == null)
+            {
+                _contextualPropertiesBookmark = bookmark;
+            }
+            return bookmark;
+        }
+
+        /// <summary>
+        /// Push multiple properties onto the context, returning an <see cref="IDisposable"/>
+        /// that can later be used to remove the properties. The properties must
+        /// be popped from the same thread/logical call context.
+        /// </summary>
+        /// <param name="propertyBag">An anonymous type containing properties.</param>
+        /// <returns>A handle to later remove the property from the context.</returns>
+        /// <param name="destructureObjects">If true, and the value is a non-primitive, non-array type,
+        /// then the value will be converted to a structure; otherwise, unknown types will
+        /// be converted to scalars, which are generally stored as strings.</param>
+        /// <returns>A token that must be disposed, in order, to pop properties back off the stack.</returns>
+        public IDisposable PushProperties(object propertyBag, bool destructureObjects = false)
+        {
+            var bookmark = LogContext.PushProperties(propertyBag, destructureObjects);
+            if (_contextualPropertiesBookmark == null)
+            {
+                _contextualPropertiesBookmark = bookmark;
+            }
+            return bookmark;
+        }
+
+        /// <summary>
         /// Enriches a given log event with data from the current <see cref="OperationContext"/>.
         /// </summary>
         /// <param name="logEvent">The log event to enrich.</param>
         /// <param name="propertyFactory">Factory for creating new properties to add to the event.</param>
-        public static void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+        internal static void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
             OperationLogContext.EnrichLogEvent(logEvent, propertyFactory);
         }
@@ -115,7 +163,12 @@ namespace Serilog.Context
             {
                 _sw.Stop();
 
-                if (_autoFailOnException && HasExceptionBeenThrown()) _outcome = OperationOutcome.Fail;
+                var exceptionThrown = HasExceptionBeenThrown();
+                if (exceptionThrown && _autoFailOnException) 
+                    _outcome = OperationOutcome.Fail;
+                else if (!exceptionThrown && _autoSucceedOnExit)
+                    _outcome = OperationOutcome.Success;
+
 
                 if (_warnIfExceeds.HasValue && _sw.Elapsed > _warnIfExceeds.Value)
                     _logger.Write(LogEventLevel.Warning, OperationExccededTimeMessage, _identifier, _description, _warnIfExceeds.Value, _outcome, _sw.Elapsed, _sw.ElapsedMilliseconds);
@@ -126,8 +179,11 @@ namespace Serilog.Context
             }
             finally
             {
-                _contextualPropertiesBookmark.Dispose();
-                _operationContextBookmark.Dispose();
+                if(_contextualPropertiesBookmark != null)
+                    _contextualPropertiesBookmark.Dispose();
+
+                if(_operationContextBookmark != null)
+                    _operationContextBookmark.Dispose();
             }
         }
 

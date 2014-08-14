@@ -47,8 +47,12 @@ namespace Serilog.Core.Enrichers
                 return new Dictionary<string, object>();
 
             // Refelct the object and get the properties, converting them into a dictionary of key/value pairs
+#if FULLNET
+            var propInfos = propertyBag.GetType().GetProperties();
+#else
             var propInfos = propertyBag.GetType().GetRuntimeProperties();
-            return propInfos.ToDictionary(t => t.Name, t => t.GetValue(propertyBag));
+#endif
+            return propInfos.ToDictionary(t => t.Name, t => t.GetValue(propertyBag, null));
         }
 
         #region Implementation of ILogEventEnricher

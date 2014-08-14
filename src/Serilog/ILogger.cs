@@ -40,8 +40,11 @@ namespace Serilog
         /// Create a logger that enriches log events with the additional properties specified in the propertyBag.
         /// </summary>
         /// <param name="propertyBag">An anonymous type containing properties.</param>
+        /// <param name="destructureObjects">If true, and the value is a non-primitive, non-array type,
+        /// then the value will be converted to a structure; otherwise, unknown types will
+        /// be converted to scalars, which are generally stored as strings.</param>
         /// <returns>A logger that will enrich log events as specified.</returns>
-        ILogger AdditionalProperties(object propertyBag);
+        ILogger AdditionalProperties(object propertyBag, bool destructureObjects = false);
 
         /// <summary>
         /// Create a logger that enriches log events via the provided enrichers.

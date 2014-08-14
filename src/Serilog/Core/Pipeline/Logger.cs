@@ -46,11 +46,11 @@ namespace Serilog.Core.Pipeline
             _enrichers = enrichers.ToArray();
         }
 
-        public ILogger AdditionalProperties(object propertyBag)
+        public ILogger AdditionalProperties(object propertyBag, bool destructureObjects = false)
         {
             return ForContext(new[]
             {
-                new PropertyBagEnricher(propertyBag)
+                new PropertyBagEnricher(propertyBag, destructureObjects)
             });
         }
 

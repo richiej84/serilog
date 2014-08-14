@@ -18,6 +18,7 @@ namespace Serilog
         /// <param name="description">A description for this operation.</param>
         /// <param name="level">The level used to write the operation details to the log. By default this is the information level.</param>
         /// <param name="warnIfExceeds">Specifies a limit, if it takes more than this limit, the level will be set to warning. By default this is not used.</param>
+        /// <param name="autoSucceedOnExit">Specifies whether or not the operation should be marked with an outcome of <see cref="OperationOutcome.Success"/> if it completes without exception.</param>
         /// <param name="autoFailOnException">Specifies whether or not the operation should be marked with an outcome of <see cref="OperationOutcome.Fail"/> if an exception is detected.</param>
         /// <returns>A disposable object. Wrap this inside a using block so the dispose can be called to stop the timing.</returns>
         public static OperationContext BeginOperation(
@@ -27,13 +28,14 @@ namespace Serilog
             object propertyBag = null,
             LogEventLevel level = LogEventLevel.Information,
             TimeSpan? warnIfExceeds = null,
+            bool autoSucceedOnExit = true,
             bool autoFailOnException = true)
         {
             object operationIdentifier = identifier;
             if (string.IsNullOrEmpty(identifier))
                 operationIdentifier = Guid.NewGuid();
 
-            return new OperationContext(logger, level, warnIfExceeds, operationIdentifier, description, autoFailOnException, propertyBag);
+            return new OperationContext(logger, level, warnIfExceeds, operationIdentifier, description, autoSucceedOnExit, autoFailOnException, propertyBag);
         }
     }
 }
